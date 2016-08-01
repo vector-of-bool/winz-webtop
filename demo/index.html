@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <head>
+    <title>winz-webtop demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel=import href="../../paper-icon-button/paper-icon-button.html">
+    <link rel=import href="../../paper-input/paper-textarea.html">
+
+    <link rel=import href="../winz-all.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+      .vertical-section-container {
+        max-width: 1000px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic winz-webtop Demo</h3>
+      <p>
+        This demo shows a simple webtop with simple blank windows that can be
+        moved and resized.
+      </p>
+      <p>
+        Press the "+" button in the bottom right corner to add a new window
+        to the webtop.
+      </p>
+      <demo-snippet>
+        <template>
+          <style is=custom-style>
+            winz-webtop {
+              min-height: 500px;
+            }
+            :root {
+              --winz-webtop-backdrop: {
+                background-color: #eee;
+              };
+              --winz-window-sizing: {
+                min-width: 100px;
+                min-height: 80px;
+              };
+              --winz-window: {
+                border: 1px solid rgba(0,0,0,0.6);
+                border-radius: 3px;
+                background-color: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(2px);
+                box-shadow: 0px 1px 5px rgba(0,0, 0, 0.3);
+                transition: 100ms all linear;
+                padding: 3px;
+                padding-top: 13px;
+              };
+              --winz-window-active: {
+                box-shadow: 0px 3px 15px rgba(0,0, 0, 0.3);
+                border-color: rgba(0,0,255,0.6);
+              };
+              --winz-window-moving: {
+                box-shadow: 0px 5px 35px rgba(0,0, 0, 0.3);
+                opacity: 0.7;
+                transform: scale(1.05);
+              };
+            }
+            [winz-top] {
+              background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1));
+              box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+              border-bottom: 1px solid #535353;
+            }
+          </style>
+          <winz-webtop>
+            <winz-window></winz-window>
+            <winz-window></winz-window>
+            <winz-window></winz-window>
+            <div winz-top>
+              <paper-icon-button icon="add" onclick=createWindow()></paper-icon-button>
+              Create a window
+            </div>
+          </winz-webtop>
+          <template id="window-template">
+            <div>Hello, world!</div>
+            <paper-textarea label='You can type in this window' placeholder='Type here...' name="Stuff"></paper-textarea>
+          </template>
+          <script>
+            function createWindow() {
+              var tmpl = document.getElementById('window-template');
+              var webtop = document.querySelector('winz-webtop');
+              webtop.createWindow(tmpl);
+            }
+          </script>
+        </template>
+      </demo-snippet>
+    </div>
+
+  </body>
+</html>

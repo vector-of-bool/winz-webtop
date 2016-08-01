@@ -1,0 +1,70 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel=import href="../iron-flex-layout/iron-flex-layout.html">
+
+<link rel=import href="winz-window-behavior.html">
+
+<!--
+`winz-window`
+Basis window element
+-->
+
+<dom-module id="winz-window-style">
+  <style>
+    :host {
+      position: absolute;
+      @apply(--winz-window-sizing);
+    }
+    :host(.winz-closing) {
+      pointer-events: none;
+    }
+    .container {
+      @apply(--winz-window);
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+      cursor: default;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      contain: strict;
+    }
+    :host([moving]) .container {
+      @apply(--winz-window-moving);
+    }
+    :host([active]) .container {
+      @apply(--winz-window-active);
+    }
+    :host ::content * {
+      cursor: initial;
+    }
+    [winz-resizer] {
+      position: absolute;
+      top: calc(100% - 10px);
+      left: calc(100% - 10px);
+      width: 20px;
+      height: 20px;
+      cursor: nwse-resize;
+    }
+  </style>
+</dom-module>
+
+<dom-module id="winz-window">
+  <template>
+    <style include=winz-window-style></style>
+    <div class="container">
+      <content></content>
+    </div>
+    <div winz-resizer></div>
+  </template>
+  <script>
+    window.Winz = window.Winz || {};
+    Winz.Window = Polymer({
+      is: 'winz-window',
+      behaviors: [
+        Winz.WindowBehavior
+      ],
+    });
+  </script>
+</dom-module>

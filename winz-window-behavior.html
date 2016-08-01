@@ -1,0 +1,199 @@
+<link rel=import href="../polymer/polymer.html">
+<link rel=import href="../neon-animation/neon-animatable-behavior.html">
+
+
+<script>
+  window.Winz = window.Winz || {};
+
+  /**
+   * Behavior for creating Windows that can exist within a `winz-webtop` element.
+   *
+   * @polymerBehavior Winz.WindowBehavior
+   */
+  Winz.WindowBehaviorImpl = {
+    properties: {
+      /**
+       * The ``winz-webtop`` element to which we are attached. There can only
+       * be one that owns the Window
+       *
+       * @type winz-webtop
+       */
+      _webtop: {
+        type: HTMLElement,
+      },
+      __WinzWindow: {
+        type: Boolean,
+        value: true
+      },
+      /**
+       * ``true`` when the window is being moved.
+       */
+      moving: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+        readOnly: true,
+      },
+      /**
+       * ``true`` when the window is at the top of the stacking order
+       */
+      active: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+        readOnly: true,
+      },
+      /**
+       * The X position of the window within the webtop
+       */
+      xOffset: {
+        type: Number,
+        value: 0,
+        readOnly: true,
+      },
+      /**
+       * The Y position of the window within the webtop
+       */
+      yOffset: {
+        type: Number,
+        value: 0,
+        readOnly: true,
+      },
+      /**
+       * The default animation configuration for the Window
+       */
+      animationConfig: {
+        type: Object,
+        value: function() {
+          var container = this.$$('.container');
+          return {
+            entry: [{
+              name: 'transform-animation',
+              node: container,
+              transformFrom: 'translateY(25px)',
+              transformTo: 'translateY(0px)',
+            }, {
+              name: 'fade-in-animation',
+              node: container,
+            }],
+            exit: [{
+              name: 'transform-animation',
+              node: container,
+              transformFrom: 'translateY(0px)',
+              transformTo: 'translateY(25px)',
+            }, {
+              name: 'fade-out-animation',
+              node: container,
+            }]
+          };
+        },
+      },
+    },
+    /**
+     * Sets the webtop that owns this window.
+     */
+    _attachToWebtop: function(wt) {
+      this._webtop = wt;
+    },
+    listeners: {
+      'track': '_onTrack',
+      'down': '_onDown',
+      'close-window': '_closeWindow',
+      'mousedown': '_onClick',
+      'neon-animation-finish': '_animationFinish'
+    },
+    ready: function() {
+      this._resizer = Polymer.dom(this.root).querySelector('[winz-resizer]');
+      if (this._resizer)
+        this._resizer.addEventListener('track', this._onResizeTrack.bind(this));
+      this._container = this.$$('.container');
+    },
+    _closeWindow: function(e) {
+      e.stopPropagation();
+      this.close();
+    },
+    _onClick: function(e) {
+      console.log(e, e.button);
+      if (e.button === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.close();
+      }
+    },
+    _animationFinish: function(e) {
+      e.stopPropagation();
+      if (e.detail === 'closing') {
+        this._webtop._removeWindow(this);
+      }
+    },
+    /**
+     * Close the window, removing it from the webtop, and from the dom.
+     */
+    close: function() {
+      this.classList.add('winz-closing');
+      this.playAnimation('exit', 'closing');
+    },
+    _onResizeTrack: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      var det = event.detail;
+      if (det.state === 'track') {
+        var width = this.offsetWidth + det.ddx;
+        var height = this.offsetHeight + det.ddy;
+        width = Math.max(width, 10);
+        height = Math.max(height, 10);
+        this.style.width = width + 'px';
+        this.style.height = height + 'px';
+      }
+    },
+    /**
+     * Handles dragging and moving of the Window within the webtop.
+     */
+    _onTrack: function(event) {
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      if (event.target !== this._container)
+        return;
+      var det = event.detail;
+      if (det.state ==='track') {
+        this.move(det.ddx, det.ddy);
+      } else if (det.state === 'start') {
+        console.log('Tracking window', this);
+        this.fire('start-move');
+        this._setMoving(true);
+      } else if (det.state === 'end') {
+        this.fire('stop-move');
+        this._setMoving(false);
+      }
+    },
+    move: function(dx, dy) {
+      var x = this.xOffset + dx;
+      var y = this.yOffset + dy;
+      y = Math.max(y, 0);
+      x = Math.max(x, 0);
+      if (this._webtop) {
+        y = Math.min(this._webtop.offsetHeight - this.offsetHeight, y);
+        x = Math.min(this._webtop.offsetWidth - this.offsetWidth, x);
+      }
+      this.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+      this._setXOffset(x);
+      this._setYOffset(y);
+    },
+    _onDown: function(e) {
+      this._webtop.raiseWindow(this);
+      if (e.target === this._container || e.target === this._resizer) {
+        e.preventDefault();
+      }
+      e.stopPropagation();
+    },
+    raise: function() {
+      this._webtop.raiseWindow(this);
+    }
+  };
+
+  Winz.WindowBehavior = [
+    Polymer.NeonAnimationRunnerBehavior,
+    Winz.WindowBehaviorImpl,
+  ];
+</script>

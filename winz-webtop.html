@@ -1,0 +1,177 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel=import href="../iron-flex-layout/iron-flex-layout.html">
+<link rel=import href="../neon-animation/neon-animation.html">
+
+<!--
+`winz-webtop`
+Contains windows and manages window elements
+
+@demo demo/index.html
+-->
+
+<dom-module id="winz-webtop">
+  <template>
+    <style>
+      :host {
+        display: block;
+        @apply(--layout-vertical);
+        position: relative;
+        overflow: hidden;
+        contain: strict;
+      }
+
+      #backdrop {
+        @apply(--winz-webtop-backdrop);
+      }
+
+      .base {
+        @apply(--layout-vertical);
+      }
+
+      .central {
+        @apply(--layout-horizontal);
+      }
+
+      .fit {
+        @apply(--layout-fit);
+      }
+
+      .flex {
+        @apply(--layout-fix);
+      }
+
+      ::content [winz-top],
+      ::content [winz-bottom] {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+      }
+
+      ::content [winz-left],
+      ::content [winz-right] {
+        @apply(--layout-vertical);
+        @apply(--layout-center);
+      }
+    </style>
+    <div id=backdrop class=fit></div>
+    <div class="base fit">
+      <content select="[winz-top]"></content>
+      <div class="central flex">
+        <content select="[winz-left]"></content>
+        <div id="windows" class=flex>
+          <content></content>
+        </div>
+        <content select="[winz-right]"></content>
+      </div>
+    </div>
+    <content select="[winz-bottom]"></content>
+  </template>
+
+  <script>
+    window.Winz = window.Winz || {};
+    Winz.Webtop = Polymer({
+      is: 'winz-webtop',
+      behaviors: [
+        Polymer.NeonAnimationRunnerBehavior,
+        Polymer.Templatizer,
+      ],
+      properties: {
+        _windows: {
+          type: Array,
+          value: [],
+        },
+      },
+      created: function() {
+        // Observe for changes, when a user appends a node to the webtop, such
+        // as a new window.
+        this._poly_observer = Polymer.dom(this).observeNodes(this._childrenChanged.bind(this));
+        var obs = this._dom_observer = new MutationObserver(function(muts) {
+          muts.forEach(function(mut) {
+            if (mut.type === 'childList') {
+              this._childrenChanged(mut);
+            }
+          }.bind(this));
+        }.bind(this));
+        obs.observe(this, {childList: true});
+      },
+      /**
+       * Handles the addition of child nodes
+       */
+      _childrenChanged: function(info) {
+        var added = info.addedNodes;
+        added.forEach(function(win, z) {
+          if (!win.__WinzWindow)
+            return;
+          Polymer.dom(this.$.windows).appendChild(win);
+          this._windows.push(win);
+          win.playAnimation('entry');
+          win._attachToWebtop(this);
+        }.bind(this));
+        this._reorderWindows();
+      },
+      /**
+       * Called to remove a Window from the webtop. Rearranges the stacking
+       * order.
+       */
+      _removeWindow: function(win) {
+        var pos = this._windows.indexOf(win);
+        if (pos === -1) {
+          throw new Error('_removeWindow called on non-owned window');
+        }
+        this._windows.splice(pos, 1);
+        this._reorderWindows();
+        console.log('Removing window', win);
+        Polymer.dom(this.$.windows).removeChild(win);
+      },
+      /**
+       * Given a window, raises it to the front of the stacking order.
+       *
+       * @param {HTMLElement} win The window to raise to the top. The window
+       *    must be a child of this webtop.
+       */
+      raiseWindow: function(win) {
+        var pos = this._windows.indexOf(win);
+        this._windows.splice(pos, 1);
+        this._windows.push(win);
+        this._reorderWindows();
+      },
+      /**
+       * Rearranges windows' z-index to keep them in a good stacking order.
+       */
+      _reorderWindows: function() {
+        this._windows.forEach(function(cwin, z) {
+          cwin.style.zIndex = z;
+          cwin._setActive(false);
+        });
+        if (!!this._windows.length) {
+          this._windows[this._windows.length-1]._setActive(true);
+        }
+      },
+      /**
+       * Creates a new Window in the webtop.
+       *
+       * @param {String|HTMLTemplateElement} what The description of how the
+       *    window will be generated. If given a ``String``, the element will be
+       *    created using ``document.createElement`` and added as the child of a
+       *    new ``winz-window`` element. If given an ``HTMLTemplateElement``,
+       *    the template will be instantiated using the given ``userdata`` as
+       *    the data model, and the resulting data will be inserted into a new
+       *    ``winz-window`` element. If given any other ``HTMLElement`` type,
+       *    the element will be added as the child of a new ``winz-window``
+       *    element.
+       *
+       * @param {Object} userdata The userdata to use when instantiating an
+       *    HTMLTemplateElement
+       */
+      createWindow: function(what, userdata) {
+        if (what instanceof HTMLTemplateElement) {
+          var tmpl = what;
+          this.templatize(tmpl);
+          var instance = this.stamp({});
+          var win = document.createElement('winz-window');
+          Polymer.dom(win).appendChild(instance.root);
+          Polymer.dom(this.root).appendChild(win);
+        }
+      },
+    });
+  </script>
+</dom-module>

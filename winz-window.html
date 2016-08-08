@@ -17,8 +17,12 @@ Basis window element
     :host(.winz-closing) {
       pointer-events: none;
     }
-    .container {
+    winz-container {
       @apply(--winz-window);
+      @apply(--winz-window2);
+      @apply(--winz-window3);
+      @apply(--winz-window4);
+      @apply(--winz-window5);
       @apply(--layout-flex);
       @apply(--layout-vertical);
       cursor: default;
@@ -28,18 +32,18 @@ Basis window element
       right: 0;
       bottom: 0;
       overflow: hidden;
-      contain: strict;
+      contain: layout style;
     }
-    :host([moving]) .container {
+    :host([moving]) winz-container {
       @apply(--winz-window-moving);
     }
-    :host([active]) .container {
+    :host([active]) winz-container {
       @apply(--winz-window-active);
     }
     :host ::content * {
       cursor: initial;
     }
-    [winz-resizer] {
+    winz-resizer {
       position: absolute;
       top: calc(100% - 10px);
       left: calc(100% - 10px);
@@ -50,21 +54,38 @@ Basis window element
   </style>
 </dom-module>
 
+<dom-module id=winz-container>
+  <template>
+    <content></content>
+  </template>
+  <script>
+    Polymer({
+      is: "winz-container"
+    })
+  </script>
+</dom-module>
+
+<dom-module id=winz-resizer>
+  <script>
+    Polymer({
+      is: "winz-resizer"
+    })
+  </script>
+</dom-module>
+
 <dom-module id="winz-window">
   <template>
     <style include=winz-window-style></style>
-    <div class="container">
+    <winz-container>
       <content></content>
-    </div>
-    <div winz-resizer></div>
+    </winz-container>
+    <winz-resizer></winz-resizer>
   </template>
   <script>
     window.Winz = window.Winz || {};
     Winz.Window = Polymer({
       is: 'winz-window',
-      behaviors: [
-        Winz.WindowBehavior
-      ],
+      behaviors: [Winz.WindowBehavior],
     });
   </script>
 </dom-module>

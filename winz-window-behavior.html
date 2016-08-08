@@ -11,6 +11,9 @@
    * @polymerBehavior Winz.WindowBehavior
    */
   Winz.WindowBehaviorImpl = {
+    hostAttributes: {
+      'winz-window': true
+    },
     properties: {
       /**
        * The ``winz-webtop`` element to which we are attached. There can only
@@ -20,6 +23,7 @@
        */
       _webtop: {
         type: HTMLElement,
+        value: null
       },
       __WinzWindow: {
         type: Boolean,
@@ -65,7 +69,7 @@
       animationConfig: {
         type: Object,
         value: function() {
-          var container = this.$$('.container');
+          var container = this.$$('winz-container');
           return {
             entry: [{
               name: 'transform-animation',
@@ -103,17 +107,17 @@
       'neon-animation-finish': '_animationFinish'
     },
     ready: function() {
-      this._resizer = Polymer.dom(this.root).querySelector('[winz-resizer]');
+      this._resizer = Polymer.dom(this.root).querySelector('winz-resizer');
       if (this._resizer)
         this._resizer.addEventListener('track', this._onResizeTrack.bind(this));
-      this._container = this.$$('.container');
+      this._container = this.$$('winz-container');
+      console.assert(!!this._container, 'Element implementing Winz.WindowBehavior must have a root "winz-container" element.');
     },
     _closeWindow: function(e) {
       e.stopPropagation();
       this.close();
     },
     _onClick: function(e) {
-      console.log(e, e.button);
       if (e.button === 1) {
         e.preventDefault();
         e.stopPropagation();
@@ -159,7 +163,6 @@
       if (det.state ==='track') {
         this.move(det.ddx, det.ddy);
       } else if (det.state === 'start') {
-        console.log('Tracking window', this);
         this.fire('start-move');
         this._setMoving(true);
       } else if (det.state === 'end') {
@@ -173,8 +176,9 @@
       y = Math.max(y, 0);
       x = Math.max(x, 0);
       if (this._webtop) {
-        y = Math.min(this._webtop.offsetHeight - this.offsetHeight, y);
-        x = Math.min(this._webtop.offsetWidth - this.offsetWidth, x);
+        var container = this._webtop.windowContainer();
+        y = Math.min(container.offsetHeight - this.offsetHeight, y);
+        x = Math.min(container.offsetWidth - this.offsetWidth, x);
       }
       this.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
       this._setXOffset(x);

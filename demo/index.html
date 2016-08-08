@@ -10,6 +10,7 @@
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
     <link rel=import href="../../paper-icon-button/paper-icon-button.html">
     <link rel=import href="../../paper-input/paper-textarea.html">
+    <link rel=import href="../../iron-icon/iron-icon.html">
 
     <link rel=import href="../winz-all.html">
 
@@ -66,7 +67,7 @@
             }
             [winz-top] {
               background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1));
-              box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+              box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
               border-bottom: 1px solid #535353;
             }
           </style>
@@ -90,6 +91,89 @@
               webtop.createWindow(tmpl);
             }
           </script>
+        </template>
+      </demo-snippet>
+    </div>
+    <div class="vertical-section-container centered">
+      <h3>Custom Window Element with Controls</h3>
+      <demo-snippet>
+        <template>
+          <dom-module id="my-window">
+            <template>
+              <style is=custom-style include="winz-window">
+                :host {
+                  --winz-window-sizing: {
+                    min-width: 180px;
+                    min-height: 80px;
+                    width: 250px;
+                    height: 150px;
+                  };
+                  --winz-window2: {
+                    padding: 0;
+                    background-color: #fafafa;
+                    @apply(--layout-vertical);
+                  };
+                  --winz-window-moving: {};
+                  --winz-window-active: {};
+                }
+                .titlebar {
+                  padding: 10px;
+                  border-bottom: 1px solid gray;
+                  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+                  pointer-events: none;
+                  background-color: #eee;
+                  @apply(--layout-horizontal);
+                  @apply(--layout-center);
+                }
+                .titlebar h3 {
+                  margin: 0;
+                  white-space: nowrap;
+                }
+                .titlebar iron-icon {
+                  margin-right: 12px;
+                  pointer-events: initial;
+                  border: 1px solid transparent;
+                  transition: all 200ms linear;
+                }
+                .titlebar iron-icon:active {
+                  transform: scale(0.9);
+                  border: 1px solid gray;
+                }
+                .content {
+                  @apply(--layout-flex);
+                  padding: 5px;
+                }
+              </style>
+              <winz-container>
+                <div class="titlebar">
+                  <iron-icon icon="close" on-tap=close></iron-icon>
+                  <h3>This is a Titlebar</h3>
+                </div>
+                <div class="content"><content></content></div>
+                <content></content>
+              </winz-container>
+              <winz-resizer></winz-resizer>
+            </template>
+            <script>
+              Polymer({
+                is: 'my-window',
+                behaviors: [Winz.WindowBehavior],
+              })
+            </script>
+          </dom-module>
+          <winz-webtop>
+            <style>
+              my-window {
+                text-align: justify;
+              }
+            </style>
+            <my-window>
+              This is a Window with some simple decorations (A titlebar with functioning close button)
+            </my-window>
+            <my-window>
+              This is another window.
+            </my-window>
+          </winz-webtop>
         </template>
       </demo-snippet>
     </div>

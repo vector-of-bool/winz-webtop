@@ -37,7 +37,7 @@ Contains windows and manages window elements
       }
 
       .flex {
-        @apply(--layout-fix);
+        @apply(--layout-flex);
       }
 
       ::content [winz-top],
@@ -99,8 +99,19 @@ Contains windows and manages window elements
       _childrenChanged: function(info) {
         var added = info.addedNodes;
         added.forEach(function(win, z) {
-          if (!win.__WinzWindow)
+          if (!(win instanceof HTMLElement))
             return;
+          if (!win.hasAttribute('winz-window')) {
+            if (/-/.test(win.localName)) {
+              // This is a custom element. It may become a winz-window in the
+              // future. Until WebComponents v1, we'll have to manually check if
+              // the element becomes a window in the near future.
+              requestAnimationFrame(function() {
+                this._childrenChanged({addedNodes: [win]});
+              }.bind(this));
+            }
+            return;
+          }
           Polymer.dom(this.$.windows).appendChild(win);
           this._windows.push(win);
           win.playAnimation('entry');
@@ -121,6 +132,9 @@ Contains windows and manages window elements
         this._reorderWindows();
         console.log('Removing window', win);
         Polymer.dom(this.$.windows).removeChild(win);
+      },
+      windowContainer: function() {
+        return this.$.windows;
       },
       /**
        * Given a window, raises it to the front of the stacking order.

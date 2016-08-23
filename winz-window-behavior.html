@@ -157,7 +157,7 @@
       event.stopPropagation();
       event.stopImmediatePropagation();
       event.preventDefault();
-      if (event.target !== this._container)
+      if (event.target !== this._container && event.target !== this)
         return;
       var det = event.detail;
       if (det.state ==='track') {

@@ -18,6 +18,11 @@ Contains windows and manages window elements
         position: relative;
         overflow: hidden;
         contain: strict;
+        pointer-events: none;
+      }
+      
+      #windows > * {
+        pointer-events: auto;
       }
 
       #backdrop {
